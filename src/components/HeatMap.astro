@@ -1,0 +1,95 @@
+---
+interface Props {
+  data: { fecha: string; value: number | null }[];
+  isBinary?: boolean;
+}
+
+const { data, isBinary = false } = Astro.props;
+
+// Organizar datos por semana
+const weeks: { fecha: string; value: number | null; day: number }[][] = [];
+let currentWeek: { fecha: string; value: number | null; day: number }[] = [];
+
+// Encontrar el primer día (puede no ser domingo)
+const firstDate = new Date(data[0].fecha);
+const firstDayOfWeek = firstDate.getDay(); // 0 = domingo, 1 = lunes, etc.
+
+// Añadir días vacíos antes del primer día
+for (let i = 0; i < firstDayOfWeek; i++) {
+  currentWeek.push({ fecha: '', value: null, day: i });
+}
+
+data.forEach((item) => {
+  const date = new Date(item.fecha);
+  const dayOfWeek = date.getDay();
+
+  currentWeek.push({ fecha: item.fecha, value: item.value, day: dayOfWeek });
+
+  if (dayOfWeek === 6) { // Sábado
+    weeks.push([...currentWeek]);
+    currentWeek = [];
+  }
+});
+
+// Añadir la última semana si no está completa
+if (currentWeek.length > 0) {
+  // Completar con días vacíos
+  while (currentWeek.length < 7) {
+    currentWeek.push({ fecha: '', value: null, day: currentWeek.length });
+  }
+  weeks.push(currentWeek);
+}
+
+// Calcular máximo para escala de colores (solo si no es binario)
+const maxValue = isBinary ? 1 : Math.max(...data.filter(d => d.value !== null).map(d => d.value || 0), 1);
+
+function getColor(value: number | null): string {
+  if (value === null) {
+    return 'transparent';
+  }
+
+  if (isBinary) {
+    return value > 0 ? '#08CB00' : 'transparent';
+  }
+
+  const intensity = Math.min(value / maxValue, 1);
+  if (intensity === 0) return 'transparent';
+  if (intensity < 0.25) return '#064A00';
+  if (intensity < 0.5) return '#087600';
+  if (intensity < 0.75) return '#0AA100';
+  return '#08CB00';
+}
+
+// Calculamos el tamaño dinámicamente en CSS
+---
+
+<div class="heatmap">
+  <div class="heatmap-container">
+    <div class="day-labels">
+      <span>Dom</span>
+      <span>Lun</span>
+      <span>Mar</span>
+      <span>Mié</span>
+      <span>Jue</span>
+      <span>Vie</span>
+      <span>Sáb</span>
+    </div>
+    <div class="heatmap-grid">
+      {weeks.map((week) => (
+        <div class="week">
+          {week.map((day) => (
+            <div
+              class="day"
+              style={`background-color: ${getColor(day.value)};`}
+              title={day.fecha ? `${day.fecha}: ${day.value ?? 'Sin datos'}` : ''}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+.heatmap{margin:1rem 0;width:100%}.heatmap-container{display:flex;gap:12px;width:100%}.day-labels{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--g);padding-top:0;font-family:Monaco,'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}.day-labels span{flex:1;display:flex;align-items:center}.heatmap-grid{display:flex;gap:4px;flex:1}.week{display:flex;flex-direction:column;gap:4px;flex:1}.day{border:1px solid #fff1;cursor:pointer;transition:all .2s;flex:1;min-height:18px}.day:hover{border-color:var(--a);box-shadow:0 0 4px var(--a)}@media(max-width:768px){.day{min-height:12px}.day-labels{font-size:8px;gap:3px}.heatmap-grid{gap:2px}.week{gap:2px}}
+</style>

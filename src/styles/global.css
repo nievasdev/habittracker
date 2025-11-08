@@ -1,0 +1,1 @@
+:root{--b:#000;--f:#ddd;--r:#333;--g:#888;--a:#08CB00}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--b);color:var(--f);font:12px/1.5 Monaco,'Courier New',Courier,monospace}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--b)}::-webkit-scrollbar-thumb{background:var(--r)}

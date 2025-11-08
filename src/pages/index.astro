@@ -1,16 +1,108 @@
 ---
+import LineChart from '../components/LineChart.astro';
+import HeatMap from '../components/HeatMap.astro';
+import habitosData from '../data/habitos.json';
+import '../styles/global.css';
 
+// Transformar datos para cada hábito
+const lecturaData = habitosData.map(d => ({ fecha: d.fecha, value: d.lectura }));
+const podcastData = habitosData.map(d => ({ fecha: d.fecha, value: d.podcast }));
+const videoData = habitosData.map(d => ({ fecha: d.fecha, value: d.video }));
+const devocionalData = habitosData.map(d => ({ fecha: d.fecha, value: d.devocional }));
+
+// Calcular estadísticas
+const cantidadVideos = habitosData.reduce((sum, d) => sum + (d.videos_creados || 0), 0);
+
+const habitos = [
+  {
+    nombre: 'Lectura - Arquitectura',
+    data: lecturaData,
+    color: '#3b82f6',
+    showChart: true,
+    unit: 'páginas'
+  },
+  {
+    nombre: 'Podcast',
+    data: podcastData,
+    color: '#8b5cf6',
+    showChart: true,
+    unit: 'minutos'
+  },
+  {
+    nombre: 'Video',
+    data: videoData,
+    color: '#ec4899',
+    showChart: true,
+    unit: 'minutos'
+  },
+  {
+    nombre: 'Devocional',
+    data: devocionalData,
+    color: '#10b981',
+    showChart: false,
+    isBinary: true,
+    unit: ''
+  }
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>HabitTracker - Seguimiento de Hábitos</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>HabitTracker</h1>
+        <p class="subtitle">Seguimiento de hábitos diarios - 3 meses</p>
+      </header>
+
+      <div class="stats-section">
+        <div class="stat-card">
+          <span class="stat-label">Cantidad de videos</span>
+          <span class="stat-value">{cantidadVideos}</span>
+        </div>
+      </div>
+
+      <div class="habits-container">
+        {habitos.map((habito) => (
+          <section class="habit-section">
+            <h2>{habito.nombre}</h2>
+
+            {habito.showChart && (
+              <div class="chart-container">
+                <LineChart
+                  data={habito.data}
+                  title={`Progreso diario (${habito.unit})`}
+                  color={habito.color}
+                />
+              </div>
+            )}
+
+            <div class="heatmap-container">
+              <h3>Mapa de actividad</h3>
+              <HeatMap
+                data={habito.data}
+                isBinary={habito.isBinary || false}
+              />
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <footer>
+        <p>
+          Edita tus datos en: <code>src/data/habitos.json</code>
+        </p>
+      </footer>
+    </main>
+  </body>
 </html>
+
+<style>
+body{font-family:Monaco,'Courier New',Courier,monospace;background-color:var(--b);color:var(--f);line-height:1.5;padding:2rem 1rem;font-size:12px}main{max-width:1200px;margin:0 auto}header{text-align:center;margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid #fff3}.stats-section{display:flex;gap:1rem;margin-bottom:3rem;justify-content:center}.stat-card{border:1px solid #fff3;padding:1rem 2rem;display:flex;flex-direction:column;align-items:center;gap:.5rem}.stat-label{font:700 10px/1.2 Monaco,'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--g)}.stat-value{font:900 32px/1 Monaco,'Courier New',Courier,monospace;color:var(--a)}h1{font:900 35px/1.2 Monaco,'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;color:var(--a)}.subtitle{color:var(--g);font-size:11px;text-transform:uppercase;letter-spacing:.05em}.habits-container{display:flex;flex-direction:column;gap:2rem}.habit-section{border:1px solid #fff3;padding:1.5rem}.habit-section h2{font:900 16px/1.2 Monaco,'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.5rem;padding-bottom:.5rem;border-bottom:1px solid #fff3;color:#EEE}.habit-section h3{font:900 14px/1.2 Monaco,'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--a);margin-bottom:1rem}.chart-container{margin-bottom:2rem;padding:1rem;border:1px solid #fff1}.heatmap-container{padding:1rem;border:1px solid #fff1}footer{margin-top:4rem;padding-top:2rem;border-top:1px solid #fff3;text-align:center;color:var(--g);font-size:10px;text-transform:uppercase;letter-spacing:.05em}code{background:#1a1a1a;padding:.2rem .5rem;font-family:Monaco,'Courier New',monospace;font-size:10px;color:var(--a);border:1px solid var(--r)}@media(max-width:768px){body{padding:1rem .5rem}h1{font-size:28px}.habit-section{padding:1rem}}
+</style>
